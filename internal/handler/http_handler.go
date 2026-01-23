@@ -37,7 +37,7 @@ func (h *HTTPHandler) CreateVendor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Get user ID from JWT token
-	req.CreatedBy = "system"
+	// req.CreatedBy = "system" // Leave empty for NULL
 
 	vendor, err := h.service.CreateVendor(r.Context(), &req)
 	if err != nil {
@@ -166,7 +166,7 @@ func (h *HTTPHandler) UpdateVendor(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// TODO: Get user ID from JWT token
-	req.UpdatedBy = "system"
+	// req.UpdatedBy = "system" // Leave empty for NULL
 
 	vendor, err := h.service.UpdateVendor(r.Context(), &req)
 	if err != nil {
