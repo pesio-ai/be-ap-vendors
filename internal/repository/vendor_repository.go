@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 	"fmt"
 
 	"github.com/jackc/pgx/v5"
@@ -44,9 +45,9 @@ type Vendor struct {
 	Notes             *string
 	Tags              []string
 	CreatedBy         *string
-	CreatedAt         string
+	CreatedAt         time.Time
 	UpdatedBy         *string
-	UpdatedAt         string
+	UpdatedAt         time.Time
 }
 
 // VendorContact represents a vendor contact person
@@ -62,8 +63,8 @@ type VendorContact struct {
 	Mobile      *string
 	IsPrimary   bool
 	Notes       *string
-	CreatedAt   string
-	UpdatedAt   string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 // VendorDocument represents a vendor document reference
@@ -89,7 +90,7 @@ type PaymentTerm struct {
 	DiscountPercent *float64
 	DiscountDays    *int
 	IsActive        bool
-	CreatedAt       string
+	CreatedAt       time.Time
 }
 
 // VendorRepository handles vendor data operations
