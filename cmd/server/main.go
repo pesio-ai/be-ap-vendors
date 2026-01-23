@@ -113,6 +113,9 @@ func main() {
 	// Payment terms routes
 	mux.HandleFunc("/api/v1/payment-terms", httpHandler.GetPaymentTerms)
 
+	// Vendor balance routes
+	mux.HandleFunc("/api/v1/vendors/balance", httpHandler.UpdateBalance)
+
 	// Apply middleware
 	var h http.Handler = mux
 	h = middleware.RequestID(h)

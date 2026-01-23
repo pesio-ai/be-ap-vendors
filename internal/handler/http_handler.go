@@ -296,3 +296,34 @@ func (h *HTTPHandler) GetPaymentTerms(w http.ResponseWriter, r *http.Request) {
 		"payment_terms": terms,
 	})
 }
+
+// UpdateBalance handles update vendor balance HTTP requests
+func (h *HTTPHandler) UpdateBalance(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		VendorID string `json:"vendor_id"`
+		EntityID string `json:"entity_id"`
+		Amount   int64  `json:"amount"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	if req.VendorID == "" || req.EntityID == "" {
+		http.Error(w, "Vendor ID and Entity ID are required", http.StatusBadRequest)
+		return
+	}
+
+	if err := h.service.UpdateBalance(r.Context(), req.VendorID, req.EntityID, req.Amount); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "updated"})
+}

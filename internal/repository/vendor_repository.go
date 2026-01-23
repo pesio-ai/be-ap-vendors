@@ -614,3 +614,26 @@ func (r *VendorRepository) ValidateVendor(ctx context.Context, vendorID, entityI
 
 	return true, "", nil
 }
+
+// UpdateBalance updates the vendor's current balance
+func (r *VendorRepository) UpdateBalance(ctx context.Context, vendorID, entityID string, amount int64) error {
+	query := `
+		UPDATE vendors
+		SET current_balance = current_balance + $3,
+		    updated_at = NOW()
+		WHERE id = $1 AND entity_id = $2
+		RETURNING id
+	`
+
+	var returnedID string
+	err := r.db.QueryRow(ctx, query, vendorID, entityID, amount).Scan(&returnedID)
+
+	if err == pgx.ErrNoRows {
+		return errors.NotFound("vendor", vendorID)
+	}
+	if err != nil {
+		return errors.Wrap(err, errors.ErrCodeInternal, "failed to update vendor balance")
+	}
+
+	return nil
+}

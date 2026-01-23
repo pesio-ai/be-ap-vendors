@@ -405,3 +405,18 @@ func (s *VendorService) GetPaymentTerms(ctx context.Context) ([]*repository.Paym
 func (s *VendorService) ValidateVendor(ctx context.Context, vendorID, entityID string) (bool, string, error) {
 	return s.vendorRepo.ValidateVendor(ctx, vendorID, entityID)
 }
+
+// UpdateBalance updates the vendor's current balance
+func (s *VendorService) UpdateBalance(ctx context.Context, vendorID, entityID string, amount int64) error {
+	if err := s.vendorRepo.UpdateBalance(ctx, vendorID, entityID, amount); err != nil {
+		return err
+	}
+
+	s.log.Info().
+		Str("vendor_id", vendorID).
+		Str("entity_id", entityID).
+		Int64("amount", amount).
+		Msg("Vendor balance updated")
+
+	return nil
+}
