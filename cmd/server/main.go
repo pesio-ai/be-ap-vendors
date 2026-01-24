@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -13,9 +14,12 @@ import (
 	"github.com/pesio-ai/be-go-common/database"
 	"github.com/pesio-ai/be-go-common/logger"
 	"github.com/pesio-ai/be-go-common/middleware"
+	pb "github.com/pesio-ai/be-go-proto/gen/go/ap"
 	"github.com/pesio-ai/be-vendors-service/internal/handler"
 	"github.com/pesio-ai/be-vendors-service/internal/repository"
 	"github.com/pesio-ai/be-vendors-service/internal/service"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func main() {
@@ -70,8 +74,11 @@ func main() {
 	// Initialize services
 	vendorService := service.NewVendorService(vendorRepo, log)
 
-	// Setup HTTP routes
+	// Setup HTTP handler
 	httpHandler := handler.NewHTTPHandler(vendorService, log)
+
+	// Setup gRPC handler
+	grpcHandler := handler.NewGRPCHandler(vendorService, log)
 	mux := http.NewServeMux()
 
 	// Health check
@@ -96,6 +103,8 @@ func main() {
 	mux.HandleFunc("/api/v1/vendors/code", httpHandler.GetVendorByCode)
 	mux.HandleFunc("/api/v1/vendors/update", httpHandler.UpdateVendor)
 	mux.HandleFunc("/api/v1/vendors/delete", httpHandler.DeleteVendor)
+	mux.HandleFunc("/api/v1/vendors/activate", httpHandler.ActivateVendor)
+	mux.HandleFunc("/api/v1/vendors/deactivate", httpHandler.DeactivateVendor)
 	mux.HandleFunc("/api/v1/vendors/validate", httpHandler.ValidateVendor)
 
 	// Vendor contact routes
@@ -139,19 +148,41 @@ func main() {
 		}
 	}()
 
+	// Setup gRPC server
+	grpcPort := 9084 // gRPC port (9000 + service number)
+	grpcServer := grpc.NewServer()
+	pb.RegisterVendorsServiceServer(grpcServer, grpcHandler)
+	reflection.Register(grpcServer)
+
+	grpcListener, err := net.Listen("tcp", fmt.Sprintf(":%d", grpcPort))
+	if err != nil {
+		log.Fatal().Err(err).Int("port", grpcPort).Msg("Failed to create gRPC listener")
+	}
+
+	go func() {
+		log.Info().Int("port", grpcPort).Msg("Starting gRPC server")
+		if err := grpcServer.Serve(grpcListener); err != nil {
+			log.Error().Err(err).Msg("gRPC server failed")
+		}
+	}()
+
 	// Graceful shutdown
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
-	log.Info().Msg("Shutting down server...")
+	log.Info().Msg("Shutting down servers...")
 
 	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), cfg.Server.ShutdownTimeout)
 	defer shutdownCancel()
 
+	// Shutdown HTTP server
 	if err := httpServer.Shutdown(shutdownCtx); err != nil {
 		log.Error().Err(err).Msg("HTTP server shutdown failed")
 	}
 
-	log.Info().Msg("Server stopped")
+	// Shutdown gRPC server
+	grpcServer.GracefulStop()
+
+	log.Info().Msg("Servers stopped")
 }

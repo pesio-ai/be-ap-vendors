@@ -201,6 +201,62 @@ func (h *HTTPHandler) DeleteVendor(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
+// ActivateVendor handles activate vendor HTTP requests
+func (h *HTTPHandler) ActivateVendor(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		ID       string `json:"id"`
+		EntityID string `json:"entity_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// TODO: Get user ID from JWT token
+	updatedBy := ""
+
+	if err := h.service.ActivateVendor(r.Context(), req.ID, req.EntityID, updatedBy); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"activated"}`))
+}
+
+// DeactivateVendor handles deactivate vendor HTTP requests
+func (h *HTTPHandler) DeactivateVendor(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	var req struct {
+		ID       string `json:"id"`
+		EntityID string `json:"entity_id"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
+
+	// TODO: Get user ID from JWT token
+	updatedBy := ""
+
+	if err := h.service.DeactivateVendor(r.Context(), req.ID, req.EntityID, updatedBy); err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(`{"status":"deactivated"}`))
+}
+
 // ValidateVendor handles validate vendor HTTP requests
 func (h *HTTPHandler) ValidateVendor(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
