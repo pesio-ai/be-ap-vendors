@@ -28,36 +28,36 @@ func NewVendorService(
 
 // CreateVendorRequest represents a create vendor request
 type CreateVendorRequest struct {
-	EntityID          string
-	VendorCode        string
-	VendorName        string
-	LegalName         *string
-	VendorType        string
-	TaxID             *string
-	IsTaxExempt       bool
-	Is1099Vendor      bool
-	Email             *string
-	Phone             *string
-	Fax               *string
-	Website           *string
-	AddressLine1      *string
-	AddressLine2      *string
-	City              *string
-	StateProvince     *string
-	PostalCode        *string
-	Country           string
-	PaymentTerms      string
-	PaymentMethod     *string
-	Currency          string
-	CreditLimit       *int64
-	BankName          *string
-	BankAccountNumber *string
-	BankRoutingNumber *string
-	SwiftCode         *string
-	IBAN              *string
-	Notes             *string
-	Tags              []string
-	CreatedBy         string
+	EntityID          string   `json:"entity_id"`
+	VendorCode        string   `json:"vendor_code,omitempty"`
+	VendorName        string   `json:"vendor_name"`
+	LegalName         *string  `json:"legal_name,omitempty"`
+	VendorType        string   `json:"vendor_type"`
+	TaxID             *string  `json:"tax_id,omitempty"`
+	IsTaxExempt       bool     `json:"is_tax_exempt"`
+	Is1099Vendor      bool     `json:"is_1099_vendor"`
+	Email             *string  `json:"email,omitempty"`
+	Phone             *string  `json:"phone,omitempty"`
+	Fax               *string  `json:"fax,omitempty"`
+	Website           *string  `json:"website,omitempty"`
+	AddressLine1      *string  `json:"address_line1,omitempty"`
+	AddressLine2      *string  `json:"address_line2,omitempty"`
+	City              *string  `json:"city,omitempty"`
+	StateProvince     *string  `json:"state_province,omitempty"`
+	PostalCode        *string  `json:"postal_code,omitempty"`
+	Country           string   `json:"country"`
+	PaymentTerms      string   `json:"payment_terms"`
+	PaymentMethod     *string  `json:"payment_method,omitempty"`
+	Currency          string   `json:"currency"`
+	CreditLimit       *int64   `json:"credit_limit,omitempty"`
+	BankName          *string  `json:"bank_name,omitempty"`
+	BankAccountNumber *string  `json:"bank_account_number,omitempty"`
+	BankRoutingNumber *string  `json:"bank_routing_number,omitempty"`
+	SwiftCode         *string  `json:"swift_code,omitempty"`
+	IBAN              *string  `json:"iban,omitempty"`
+	Notes             *string  `json:"notes,omitempty"`
+	Tags              []string `json:"tags,omitempty"`
+	CreatedBy         string   `json:"created_by,omitempty"`
 }
 
 // UpdateVendorRequest represents an update vendor request
@@ -147,6 +147,12 @@ func (s *VendorService) CreateVendor(ctx context.Context, req *CreateVendorReque
 	}
 
 	// Create vendor with pending approval status
+	// Convert empty string to NULL for CreatedBy
+	var createdBy *string
+	if req.CreatedBy != "" {
+		createdBy = &req.CreatedBy
+	}
+
 	vendor := &repository.Vendor{
 		EntityID:          req.EntityID,
 		VendorCode:        strings.ToUpper(req.VendorCode),
@@ -179,7 +185,7 @@ func (s *VendorService) CreateVendor(ctx context.Context, req *CreateVendorReque
 		IBAN:              req.IBAN,
 		Notes:             req.Notes,
 		Tags:              req.Tags,
-		CreatedBy:         &req.CreatedBy,
+		CreatedBy:         createdBy,
 	}
 
 	if err := s.vendorRepo.Create(ctx, vendor); err != nil {
@@ -269,7 +275,13 @@ func (s *VendorService) UpdateVendor(ctx context.Context, req *UpdateVendorReque
 	vendor.IBAN = req.IBAN
 	vendor.Notes = req.Notes
 	vendor.Tags = req.Tags
-	vendor.UpdatedBy = &req.UpdatedBy
+
+	// Convert empty string to NULL for UpdatedBy
+	var updatedBy *string
+	if req.UpdatedBy != "" {
+		updatedBy = &req.UpdatedBy
+	}
+	vendor.UpdatedBy = updatedBy
 
 	if err := s.vendorRepo.Update(ctx, vendor); err != nil {
 		return nil, err
@@ -312,8 +324,14 @@ func (s *VendorService) ActivateVendor(ctx context.Context, id, entityID, update
 		return err
 	}
 
+	// Convert empty string to NULL for UpdatedBy
+	var updatedByPtr *string
+	if updatedBy != "" {
+		updatedByPtr = &updatedBy
+	}
+
 	vendor.Status = "active"
-	vendor.UpdatedBy = &updatedBy
+	vendor.UpdatedBy = updatedByPtr
 
 	if err := s.vendorRepo.Update(ctx, vendor); err != nil {
 		return err
@@ -336,8 +354,14 @@ func (s *VendorService) DeactivateVendor(ctx context.Context, id, entityID, upda
 
 	// TODO: Check if vendor has pending invoices
 
+	// Convert empty string to NULL for UpdatedBy
+	var updatedByPtr *string
+	if updatedBy != "" {
+		updatedByPtr = &updatedBy
+	}
+
 	vendor.Status = "inactive"
-	vendor.UpdatedBy = &updatedBy
+	vendor.UpdatedBy = updatedByPtr
 
 	if err := s.vendorRepo.Update(ctx, vendor); err != nil {
 		return err

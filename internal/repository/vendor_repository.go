@@ -12,42 +12,42 @@ import (
 
 // Vendor represents a vendor/supplier
 type Vendor struct {
-	ID                string
-	EntityID          string
-	VendorCode        string
-	VendorName        string
-	LegalName         *string
-	VendorType        string
-	Status            string
-	TaxID             *string
-	IsTaxExempt       bool
-	Is1099Vendor      bool
-	Email             *string
-	Phone             *string
-	Fax               *string
-	Website           *string
-	AddressLine1      *string
-	AddressLine2      *string
-	City              *string
-	StateProvince     *string
-	PostalCode        *string
-	Country           string
-	PaymentTerms      string
-	PaymentMethod     *string
-	Currency          string
-	CreditLimit       *int64
-	CurrentBalance    int64
-	BankName          *string
-	BankAccountNumber *string
-	BankRoutingNumber *string
-	SwiftCode         *string
-	IBAN              *string
-	Notes             *string
-	Tags              []string
-	CreatedBy         *string
-	CreatedAt         time.Time
-	UpdatedBy         *string
-	UpdatedAt         time.Time
+	ID                string     `json:"id"`
+	EntityID          string     `json:"entity_id"`
+	VendorCode        string     `json:"vendor_code"`
+	VendorName        string     `json:"vendor_name"`
+	LegalName         *string    `json:"legal_name,omitempty"`
+	VendorType        string     `json:"vendor_type"`
+	Status            string     `json:"status"`
+	TaxID             *string    `json:"tax_id,omitempty"`
+	IsTaxExempt       bool       `json:"is_tax_exempt"`
+	Is1099Vendor      bool       `json:"is_1099_vendor"`
+	Email             *string    `json:"email,omitempty"`
+	Phone             *string    `json:"phone,omitempty"`
+	Fax               *string    `json:"fax,omitempty"`
+	Website           *string    `json:"website,omitempty"`
+	AddressLine1      *string    `json:"address_line1,omitempty"`
+	AddressLine2      *string    `json:"address_line2,omitempty"`
+	City              *string    `json:"city,omitempty"`
+	StateProvince     *string    `json:"state_province,omitempty"`
+	PostalCode        *string    `json:"postal_code,omitempty"`
+	Country           string     `json:"country"`
+	PaymentTerms      string     `json:"payment_terms"`
+	PaymentMethod     *string    `json:"payment_method,omitempty"`
+	Currency          string     `json:"currency"`
+	CreditLimit       *int64     `json:"credit_limit,omitempty"`
+	CurrentBalance    int64      `json:"current_balance"`
+	BankName          *string    `json:"bank_name,omitempty"`
+	BankAccountNumber *string    `json:"bank_account_number,omitempty"`
+	BankRoutingNumber *string    `json:"bank_routing_number,omitempty"`
+	SwiftCode         *string    `json:"swift_code,omitempty"`
+	IBAN              *string    `json:"iban,omitempty"`
+	Notes             *string    `json:"notes,omitempty"`
+	Tags              []string   `json:"tags,omitempty"`
+	CreatedBy         *string    `json:"created_by,omitempty"`
+	CreatedAt         time.Time  `json:"created_at"`
+	UpdatedBy         *string    `json:"updated_by,omitempty"`
+	UpdatedAt         time.Time  `json:"updated_at"`
 }
 
 // VendorContact represents a vendor contact person
