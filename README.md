@@ -449,11 +449,61 @@ go test -cover ./...
 go test ./internal/service
 ```
 
+## Authentication & Authorization
+
+This service implements **JWT-based authentication** with entity-scoped authorization via the `be-go-common/auth` middleware.
+
+### How It Works
+
+1. **gRPC Auth Interceptor**: All gRPC requests require a valid JWT token in metadata
+2. **Token Validation**: Auth interceptor calls identity service to validate token
+3. **User Context Injection**: Authenticated user info (user_id, entity_id, session_id) injected into request context
+4. **Entity Verification**: Handlers verify request entity_id matches user's entity_id
+5. **Audit Trail**: User ID from token used for created_by/updated_by fields
+
+### Testing with Auth
+
+**1. Get a JWT token from identity service**:
+```bash
+# Login as admin (see be-identity-service README for bootstrap instructions)
+grpcurl -plaintext -d '{
+  "email": "admin@test.com",
+  "password": "Admin123!",
+  "entity_domain": "b912b3e0-523e-46a2-9a90-587bc6c95cfa",
+  "device_type": "web",
+  "device_name": "test-browser",
+  "ip_address": "127.0.0.1"
+}' localhost:9081 platform.IdentityService/Login
+```
+
+**2. Use token in gRPC requests**:
+```bash
+grpcurl -plaintext \
+  -H "authorization: Bearer YOUR_ACCESS_TOKEN_HERE" \
+  -d '{
+    "entity_id": "b912b3e0-523e-46a2-9a90-587bc6c95cfa",
+    "vendor_code": "VND-001",
+    "vendor_name": "Acme Corp",
+    "vendor_type": "supplier",
+    "country": "US",
+    "payment_terms": "NET30",
+    "currency": "USD"
+  }' localhost:9084 ap.VendorsService/CreateVendor
+```
+
+### Security Features
+
+- **Multi-tenant Isolation**: Users can only access vendors for their entity
+- **Impersonation Prevention**: created_by/updated_by fields use authenticated user_id (not client-provided)
+- **Unauthenticated Requests Blocked**: All gRPC endpoints require valid JWT token
+- **Entity Mismatch Detection**: Requests attempting cross-entity access are rejected
+
 ## Integration with Other Services
 
-### be-identity-service (PLT-1)
-- Future: JWT authentication for all endpoints
-- User ID extraction from token for created_by/updated_by fields
+### be-identity-service (PLT-1) ✅ IMPLEMENTED
+- **JWT Authentication**: All gRPC endpoints require valid token
+- **User Context**: User ID, entity ID, session ID extracted from token
+- **Audit Trail**: created_by/updated_by fields populated from authenticated user
 
 ### be-entity-service (PLT-2)
 - Validates entity_id references valid entities

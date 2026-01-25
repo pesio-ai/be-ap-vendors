@@ -5,7 +5,7 @@ go 1.25.0
 require (
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/pesio-ai/be-go-common v0.0.0-20260123134527-9fd98075f18a
-	github.com/pesio-ai/be-go-proto v0.0.0-00010101000000-000000000000
+	github.com/pesio-ai/be-go-proto v0.0.0-20260124164652-9c290ae7759a
 	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11
 )
@@ -26,3 +26,5 @@ require (
 )
 
 replace github.com/pesio-ai/be-go-proto => ../be-go-proto
+
+replace github.com/pesio-ai/be-go-common => ../be-go-common

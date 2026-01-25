@@ -3,6 +3,7 @@ package handler
 import (
 	"context"
 
+	"github.com/pesio-ai/be-go-common/auth"
 	"github.com/pesio-ai/be-go-common/logger"
 	commonpb "github.com/pesio-ai/be-go-proto/gen/go/common"
 	pb "github.com/pesio-ai/be-go-proto/gen/go/ap"
@@ -30,11 +31,28 @@ func NewGRPCHandler(vendorService *service.VendorService, log *logger.Logger) *G
 
 // CreateVendor creates a new vendor
 func (h *GRPCHandler) CreateVendor(ctx context.Context, req *pb.CreateVendorRequest) (*pb.Vendor, error) {
+	// Extract user context from authenticated request
+	userCtx, err := auth.GetUserContext(ctx)
+	if err != nil {
+		h.log.Warn().Err(err).Msg("User context not found")
+		return nil, status.Error(codes.Unauthenticated, "authentication required")
+	}
+
 	h.log.Info().
 		Str("entity_id", req.EntityId).
 		Str("vendor_code", req.VendorCode).
 		Str("vendor_name", req.VendorName).
+		Str("user_id", userCtx.UserID).
 		Msg("gRPC CreateVendor request")
+
+	// Verify entity_id matches authenticated user's entity
+	if req.EntityId != userCtx.EntityID {
+		h.log.Warn().
+			Str("req_entity_id", req.EntityId).
+			Str("user_entity_id", userCtx.EntityID).
+			Msg("Entity ID mismatch")
+		return nil, status.Error(codes.PermissionDenied, "access denied: entity mismatch")
+	}
 
 	svcReq := &service.CreateVendorRequest{
 		EntityID:          req.EntityId,
@@ -66,7 +84,7 @@ func (h *GRPCHandler) CreateVendor(ctx context.Context, req *pb.CreateVendorRequ
 		IBAN:              stringPtr(req.Iban),
 		Notes:             stringPtr(req.Notes),
 		Tags:              req.Tags,
-		CreatedBy:         req.CreatedBy,
+		CreatedBy:         userCtx.UserID, // Use authenticated user ID
 	}
 
 	vendor, err := h.vendorService.CreateVendor(ctx, svcReq)
@@ -96,10 +114,27 @@ func (h *GRPCHandler) GetVendor(ctx context.Context, req *pb.GetVendorRequest) (
 
 // UpdateVendor updates a vendor
 func (h *GRPCHandler) UpdateVendor(ctx context.Context, req *pb.UpdateVendorRequest) (*pb.Vendor, error) {
+	// Extract user context from authenticated request
+	userCtx, err := auth.GetUserContext(ctx)
+	if err != nil {
+		h.log.Warn().Err(err).Msg("User context not found")
+		return nil, status.Error(codes.Unauthenticated, "authentication required")
+	}
+
 	h.log.Info().
 		Str("id", req.Id).
 		Str("entity_id", req.EntityId).
+		Str("user_id", userCtx.UserID).
 		Msg("gRPC UpdateVendor request")
+
+	// Verify entity_id matches authenticated user's entity
+	if req.EntityId != userCtx.EntityID {
+		h.log.Warn().
+			Str("req_entity_id", req.EntityId).
+			Str("user_entity_id", userCtx.EntityID).
+			Msg("Entity ID mismatch")
+		return nil, status.Error(codes.PermissionDenied, "access denied: entity mismatch")
+	}
 
 	svcReq := &service.UpdateVendorRequest{
 		ID:                req.Id,
@@ -133,7 +168,7 @@ func (h *GRPCHandler) UpdateVendor(ctx context.Context, req *pb.UpdateVendorRequ
 		IBAN:              stringPtr(req.Iban),
 		Notes:             stringPtr(req.Notes),
 		Tags:              req.Tags,
-		UpdatedBy:         "",
+		UpdatedBy:         userCtx.UserID, // Use authenticated user ID
 	}
 
 	vendor, err := h.vendorService.UpdateVendor(ctx, svcReq)
@@ -212,12 +247,29 @@ func (h *GRPCHandler) ListVendors(ctx context.Context, req *pb.ListVendorsReques
 
 // ActivateVendor activates a vendor
 func (h *GRPCHandler) ActivateVendor(ctx context.Context, req *pb.ActivateVendorRequest) (*commonpb.Response, error) {
+	// Extract user context from authenticated request
+	userCtx, err := auth.GetUserContext(ctx)
+	if err != nil {
+		h.log.Warn().Err(err).Msg("User context not found")
+		return nil, status.Error(codes.Unauthenticated, "authentication required")
+	}
+
 	h.log.Info().
 		Str("id", req.Id).
 		Str("entity_id", req.EntityId).
+		Str("user_id", userCtx.UserID).
 		Msg("gRPC ActivateVendor request")
 
-	err := h.vendorService.ActivateVendor(ctx, req.Id, req.EntityId, "")
+	// Verify entity_id matches authenticated user's entity
+	if req.EntityId != userCtx.EntityID {
+		h.log.Warn().
+			Str("req_entity_id", req.EntityId).
+			Str("user_entity_id", userCtx.EntityID).
+			Msg("Entity ID mismatch")
+		return nil, status.Error(codes.PermissionDenied, "access denied: entity mismatch")
+	}
+
+	err = h.vendorService.ActivateVendor(ctx, req.Id, req.EntityId, userCtx.UserID)
 	if err != nil {
 		h.log.Error().Err(err).Msg("Failed to activate vendor")
 		return nil, toGRPCError(err)
@@ -231,12 +283,29 @@ func (h *GRPCHandler) ActivateVendor(ctx context.Context, req *pb.ActivateVendor
 
 // DeactivateVendor deactivates a vendor
 func (h *GRPCHandler) DeactivateVendor(ctx context.Context, req *pb.DeactivateVendorRequest) (*commonpb.Response, error) {
+	// Extract user context from authenticated request
+	userCtx, err := auth.GetUserContext(ctx)
+	if err != nil {
+		h.log.Warn().Err(err).Msg("User context not found")
+		return nil, status.Error(codes.Unauthenticated, "authentication required")
+	}
+
 	h.log.Info().
 		Str("id", req.Id).
 		Str("entity_id", req.EntityId).
+		Str("user_id", userCtx.UserID).
 		Msg("gRPC DeactivateVendor request")
 
-	err := h.vendorService.DeactivateVendor(ctx, req.Id, req.EntityId, "")
+	// Verify entity_id matches authenticated user's entity
+	if req.EntityId != userCtx.EntityID {
+		h.log.Warn().
+			Str("req_entity_id", req.EntityId).
+			Str("user_entity_id", userCtx.EntityID).
+			Msg("Entity ID mismatch")
+		return nil, status.Error(codes.PermissionDenied, "access denied: entity mismatch")
+	}
+
+	err = h.vendorService.DeactivateVendor(ctx, req.Id, req.EntityId, userCtx.UserID)
 	if err != nil {
 		h.log.Error().Err(err).Msg("Failed to deactivate vendor")
 		return nil, toGRPCError(err)

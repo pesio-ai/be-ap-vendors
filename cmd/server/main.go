@@ -10,15 +10,18 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/pesio-ai/be-go-common/auth"
 	"github.com/pesio-ai/be-go-common/config"
 	"github.com/pesio-ai/be-go-common/database"
 	"github.com/pesio-ai/be-go-common/logger"
 	"github.com/pesio-ai/be-go-common/middleware"
 	pb "github.com/pesio-ai/be-go-proto/gen/go/ap"
+	identitypb "github.com/pesio-ai/be-go-proto/gen/go/platform"
 	"github.com/pesio-ai/be-vendors-service/internal/handler"
 	"github.com/pesio-ai/be-vendors-service/internal/repository"
 	"github.com/pesio-ai/be-vendors-service/internal/service"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
 )
 
@@ -73,6 +76,17 @@ func main() {
 
 	// Initialize services
 	vendorService := service.NewVendorService(vendorRepo, log)
+
+	// Connect to identity service for authentication
+	identityGrpcAddr := getEnv("IDENTITY_GRPC_URL", "localhost:9081")
+	identityConn, err := grpc.NewClient(identityGrpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to connect to identity service")
+	}
+	defer identityConn.Close()
+
+	identityClient := identitypb.NewIdentityServiceClient(identityConn)
+	log.Info().Str("identity_grpc", identityGrpcAddr).Msg("Identity service client initialized")
 
 	// Setup HTTP handler
 	httpHandler := handler.NewHTTPHandler(vendorService, log)
@@ -148,9 +162,16 @@ func main() {
 		}
 	}()
 
-	// Setup gRPC server
+	// Setup gRPC server with auth interceptor
 	grpcPort := 9084 // gRPC port (9000 + service number)
-	grpcServer := grpc.NewServer()
+
+	// Create auth interceptor
+	authInterceptor := auth.NewInterceptor(identityClient, log)
+
+	// Create gRPC server with auth interceptor
+	grpcServer := grpc.NewServer(
+		grpc.UnaryInterceptor(authInterceptor.UnaryServerInterceptor()),
+	)
 	pb.RegisterVendorsServiceServer(grpcServer, grpcHandler)
 	reflection.Register(grpcServer)
 
@@ -185,4 +206,11 @@ func main() {
 	grpcServer.GracefulStop()
 
 	log.Info().Msg("Servers stopped")
+}
+
+func getEnv(key, defaultValue string) string {
+	if value := os.Getenv(key); value != "" {
+		return value
+	}
+	return defaultValue
 }
