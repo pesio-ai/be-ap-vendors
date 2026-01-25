@@ -4,8 +4,8 @@ import (
 	"context"
 	"strings"
 
-	"github.com/pesio-ai/be-go-common/errors"
-	"github.com/pesio-ai/be-go-common/logger"
+	"github.com/pesio-ai/be-lib-common/errors"
+	"github.com/pesio-ai/be-lib-common/logger"
 	"github.com/pesio-ai/be-vendors-service/internal/repository"
 )
 

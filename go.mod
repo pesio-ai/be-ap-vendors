@@ -4,8 +4,8 @@ go 1.25.0
 
 require (
 	github.com/jackc/pgx/v5 v5.8.0
-	github.com/pesio-ai/be-go-proto v0.0.0-20260124164652-9c290ae7759a
 	github.com/pesio-ai/be-lib-common v0.0.0-20260123134527-9fd98075f18a
+	github.com/pesio-ai/be-lib-proto v0.0.0-20260124164652-9c290ae7759a
 	google.golang.org/grpc v1.78.0
 	google.golang.org/protobuf v1.36.11
 )
@@ -25,6 +25,6 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20251029180050-ab9386a59fda // indirect
 )
 
-replace github.com/pesio-ai/be-go-proto => ../be-go-proto
+replace github.com/pesio-ai/be-lib-proto => ../be-lib-proto
 
 replace github.com/pesio-ai/be-lib-common => ../be-lib-common
