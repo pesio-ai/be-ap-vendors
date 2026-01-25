@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"github.com/pesio-ai/be-lib-common/logger"
-	"github.com/pesio-ai/be-vendors-service/internal/service"
+	"github.com/pesio-ai/be-ap-vendors/internal/service"
 )
 
 // HTTPHandler handles HTTP requests

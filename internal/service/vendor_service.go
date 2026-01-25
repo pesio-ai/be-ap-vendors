@@ -6,7 +6,7 @@ import (
 
 	"github.com/pesio-ai/be-lib-common/errors"
 	"github.com/pesio-ai/be-lib-common/logger"
-	"github.com/pesio-ai/be-vendors-service/internal/repository"
+	"github.com/pesio-ai/be-ap-vendors/internal/repository"
 )
 
 // VendorService handles vendor business logic

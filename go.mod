@@ -1,4 +1,4 @@
-module github.com/pesio-ai/be-vendors-service
+module github.com/pesio-ai/be-ap-vendors
 
 go 1.25.0
 
