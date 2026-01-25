@@ -78,7 +78,7 @@ func main() {
 	vendorService := service.NewVendorService(vendorRepo, log)
 
 	// Connect to identity service for authentication
-	identityGrpcAddr := getEnv("IDENTITY_GRPC_URL", "localhost:9081")
+	identityGrpcAddr := getEnv("IDENTITY_GRPC_URL", "localhost:9080")
 	identityConn, err := grpc.NewClient(identityGrpcAddr, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		log.Fatal().Err(err).Msg("Failed to connect to identity service")
@@ -163,7 +163,7 @@ func main() {
 	}()
 
 	// Setup gRPC server with auth interceptor
-	grpcPort := 9084 // gRPC port (9000 + service number)
+	grpcPort := getEnvInt("GRPC_PORT", 9086) // AP Vendors gRPC port
 
 	// Create auth interceptor
 	authInterceptor := auth.NewInterceptor(identityClient, log)
@@ -211,6 +211,17 @@ func main() {
 func getEnv(key, defaultValue string) string {
 	if value := os.Getenv(key); value != "" {
 		return value
+	}
+	return defaultValue
+}
+
+func getEnvInt(key string, defaultValue int) int {
+	if value := os.Getenv(key); value != "" {
+		var result int
+		_, err := fmt.Sscanf(value, "%d", &result)
+		if err == nil {
+			return result
+		}
 	}
 	return defaultValue
 }
