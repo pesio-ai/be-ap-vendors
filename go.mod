@@ -27,4 +27,4 @@ require (
 
 replace github.com/pesio-ai/be-go-proto => ../be-go-proto
 
-replace github.com/pesio-ai/be-lib-common => ../be-go-common
+replace github.com/pesio-ai/be-lib-common => ../be-lib-common
