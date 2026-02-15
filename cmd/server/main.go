@@ -13,6 +13,7 @@ import (
 	"github.com/pesio-ai/be-lib-common/auth"
 	"github.com/pesio-ai/be-lib-common/config"
 	"github.com/pesio-ai/be-lib-common/database"
+	"github.com/pesio-ai/be-lib-common/health"
 	"github.com/pesio-ai/be-lib-common/logger"
 	"github.com/pesio-ai/be-lib-common/middleware"
 	pb "github.com/pesio-ai/be-lib-proto/gen/go/ap"
@@ -96,10 +97,8 @@ func main() {
 	mux := http.NewServeMux()
 
 	// Health check
-	mux.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"healthy"}`))
-	})
+	healthHandler := health.NewHandler("be-ap-vendors", cfg.Service.Version)
+	mux.Handle("/health", healthHandler)
 
 	// Vendor routes
 	mux.HandleFunc("/api/v1/vendors", func(w http.ResponseWriter, r *http.Request) {
